@@ -1,0 +1,89 @@
+-- database: ./movie.db
+
+-- Чтобы выполнить весь файл, нажмите кнопку ▷ в правом верхнем углу окна.
+
+SELECT * FROM movies;
+
+SELECT  title, release_date
+FROM movies
+WHERE release_date > '2016';
+
+SELECT  title, release_date
+FROM movies
+WHERE release_date > '2008' AND release_date < '2010';
+
+-- сортировка от меньшего к большему
+SELECT vote_average, title
+FROM movies
+ORDER BY vote_average;
+
+-- сортировка в обратную сторону (от большего к меньшему)
+SELECT vote_average, title
+FROM movies
+ORDER BY vote_average DESC;
+
+SELECT * FROM movies
+ORDER BY RANDOM()
+LIMIT 1;
+
+SELECT title, release_date FROM movies
+WHERE release_date > '2008' AND release_date < '2010'
+ORDER BY RANDOM()
+LIMIT 3;
+
+SELECT * FROM movies
+WHERE budget > 30000000 AND director_id = 5417;
+
+SELECT * FROM movies
+WHERE release_date>2015 OR vote_average>8;
+
+SELECT * FROM movies
+WHERE NOT budget = 0;
+
+SELECT * FROM movies
+WHERE release_date BETWEEN '2015-01' AND '2015-02';
+
+-- %: Заменяет любую последовательность символов (в том числе и пустую)
+-- Выбор всех фильмов, название которых начинается с Harry Potter
+SELECT * FROM movies
+WHERE title LIKE 'Harry Potter%';
+
+-- _: Заменяет один любой символ.
+-- Выбор всех фильмов, в описании которых есть слово programmer
+SELECT * FROM movies
+WHERE tagline LIKE '%programmer%';
+
+-- IN: Позволяет сравнивать значение с набором значений
+-- Выбор фильмов с режиссерами из списка (Кристофер Нолан и Хаяо Миядзаки)
+SELECT * FROM movies
+WHERE director_id IN (4765, 5417);
+
+-- IS NULL, IS NOT NULL: Проверяет наличие или отсутствие значения.
+-- Выбор фильмов, у которых есть слоган
+SELECT * FROM movies
+WHERE tagline IS NOT NULL;
+
+-- Возвращает 10 первых строк из таблицы movies
+SELECT * FROM movies
+LIMIT 10;
+
+-- Возвращает 10 строк из таблицы movies начиная с 100
+SELECT * FROM movies
+LIMIT 10 OFFSET 100;
+
+SELECT * FROM movies
+ORDER BY popularity DESC
+LIMIT 1;
+
+SELECT * FROM movies
+WHERE release_date BETWEEN '2009-11' AND '2010-1'
+ORDER BY budget DESC
+LIMIT 1;
+
+SELECT * FROM movies
+WHERE tagline LIKE 'The battle within.'
+LIMIT 1;
+
+SELECT * FROM movies
+WHERE release_date < '1980' and vote_average > '8'
+ORDER BY vote_count DESC
