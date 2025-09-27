@@ -1,8 +1,10 @@
 import sqlite3
 from datetime import datetime
 from config import DATABASE 
-import os
 import cv2
+import numpy as np
+import os
+from math import sqrt, ceil, floor
 
 class DatabaseManager:
     def __init__(self, database):
@@ -38,6 +40,36 @@ class DatabaseManager:
 
             conn.commit()
 
+
+    def add_column(self):
+        conn = sqlite3.connect(self.database)
+        with conn:
+            conn.execute("ALTER TABLE users ADD COLUMN score INTEGER DEFAULT 0")
+
+    
+    def add_score(self, count, user_id):
+        conn = sqlite3.connect(self.database)
+        with conn:
+            conn.execute('UPDATE users SET score = score + ? WHERE user_id = ?', (count, user_id,))
+            conn.commit()
+
+
+    def show_score(self, user_id):
+        conn = sqlite3.connect(self.database)
+        with conn:
+            cur = conn.cursor() 
+            cur.execute('SELECT score FROM users WHERE user_id = ?', (user_id,))
+            return cur.fetchall()[0][0]
+        
+
+    def remove_score(self, count, user_id):
+        conn = sqlite3.connect(self.database)
+        with conn:
+            conn.execute('UPDATE users SET score = score - ? WHERE user_id = ?', (count, user_id,))
+            conn.commit()
+
+
+
     def add_user(self, user_id, user_name):
         conn = sqlite3.connect(self.database)
         with conn:
@@ -47,7 +79,7 @@ class DatabaseManager:
     def add_prize(self, data):
         conn = sqlite3.connect(self.database)
         with conn:
-            conn.executemany('''INSERT INTO prizes (image) VALUES (?)''', data)
+            conn.executemany('''INSERT INTO prizes (image) VALUES (?)''', [data])
             conn.commit()
 
     def add_winner(self, user_id, prize_id):
@@ -71,6 +103,21 @@ class DatabaseManager:
             conn.commit()
 
 
+    def mark_prize_update(self):
+        conn = sqlite3.connect(self.database)
+        with conn:
+            conn.execute('''UPDATE prizes SET used = 0''')
+            conn.commit()
+
+
+    def sum_used_prize(self):
+        conn = sqlite3.connect(self.database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute('SELECT SUM(used) FROM prizes')
+            return cur.fetchall()[0][0]
+
+
     def get_users(self):
         conn = sqlite3.connect(self.database)
         with conn:
@@ -92,7 +139,71 @@ class DatabaseManager:
             cur.execute('SELECT * FROM prizes WHERE used = 0 ORDER BY RANDOM() LIMIT 1')
         return cur.fetchall()[0]
     
-  
+
+    def get_random_used_prize(self):
+        conn = sqlite3.connect(self.database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute('SELECT * FROM prizes WHERE used = 1 ORDER BY RANDOM() LIMIT 1')
+        return cur.fetchall()[0]
+    
+
+    def get_winners_count(self, prize_id):
+        conn = sqlite3.connect(self.database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute('SELECT COUNT(*) FROM winners WHERE prize_id = ?', (prize_id, ))
+            return cur.fetchall()[0][0]
+
+
+    def get_winners_img(self, user_id):
+        conn = sqlite3.connect(self.database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute(''' 
+SELECT image FROM winners 
+INNER JOIN prizes ON 
+winners.prize_id = prizes.prize_id
+WHERE user_id = ?''', (user_id, ))
+            return cur.fetchall()
+   
+   
+    
+    def get_rating(self):
+        conn = sqlite3.connect(self.database)
+        with conn:
+            cur = conn.cursor()
+            cur.execute('''
+SELECT users.user_name, COUNT(winners.prize_id) AS count_prize
+FROM winners
+INNER JOIN users ON users.user_id = winners.user_id
+GROUP BY winners.user_id
+ORDER BY count_prize DESC
+LIMIT 10
+''')
+            return cur.fetchall()
+        
+
+
+# def create_collage(image_paths):
+#     images = []
+#     for path in image_paths:
+#         image = cv2.imread(path)
+#         images.append(image)
+
+#     num_images = len(images)
+#     num_cols = floor(sqrt(num_images)) # Поиск количество картинок по горизонтали
+#     num_rows = ceil(num_images/num_cols)  # Поиск количество картинок по вертикали
+#     # Создание пустого коллажа
+#     collage = np.zeros((num_rows * images[0].shape[0], num_cols * images[0].shape[1], 3), dtype=np.uint8)
+#     # Размещение изображений на коллаже
+#     for i, image in enumerate(images):
+#         row = i // num_cols
+#         col = i % num_cols
+#         collage[row*image.shape[0]:(row+1)*image.shape[0], col*image.shape[1]:(col+1)*image.shape[1], :] = image
+#         return collage
+
+
 def hide_img(img_name):
     image = cv2.imread(f'img/{img_name}')
     blurred_image = cv2.GaussianBlur(image, (15, 15), 0)
@@ -105,4 +216,4 @@ if __name__ == '__main__':
     manager.create_tables()
     prizes_img = os.listdir('img')
     data = [(x,) for x in prizes_img]
-    manager.add_prize(data)
+    #manager.add_prize(data)

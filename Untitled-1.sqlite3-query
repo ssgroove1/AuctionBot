@@ -86,4 +86,60 @@ LIMIT 1;
 
 SELECT * FROM movies
 WHERE release_date < '1980' and vote_average > '8'
-ORDER BY vote_count DESC
+ORDER BY vote_count DESC;
+
+
+SELECT genre_id, COUNT(*) 
+FROM movies_genres
+GROUP BY genre_id;
+
+SELECT director_id, COUNT(*) 
+FROM movies
+GROUP BY director_id;
+
+SELECT director_id, avg(budget) AS avg_budget
+FROM movies
+GROUP BY director_id
+ORDER BY avg_budget DESC;
+
+-- Возвращает таблицу с столбцами: название фильмов и имена режиссеров. Вывод реализован с помощью соединения двух таблиц: таблицы с фильмами и с режиссерами по полю director_id 
+SELECT title, name AS director_name
+FROM movies
+INNER JOIN directors ON movies.director_id = directors.id;
+
+-- Возвращает фильмы и жанры этих фильмов
+SELECT title, genre
+FROM movies
+INNER JOIN movies_genres ON movies.id = movies_genres.movie_id
+INNER JOIN genres ON movies_genres.genre_id = genres.genre_id;
+
+
+select name AS director_name, MAX(release_date)
+FROM movies
+INNER JOIN directors ON movies.director_id = directors.id
+GROUP BY director_name;
+
+SELECT name AS director_name, SUM(budget) AS sum_budget
+FROM movies
+INNER JOIN directors ON movies.director_id = directors.id
+GROUP BY director_name
+ORDER BY sum_budget DESC;
+
+select name AS director_name, COUNT(title) AS number_movies
+FROM movies
+INNER JOIN directors ON movies.director_id = directors.id
+GROUP BY director_name
+ORDER BY number_movies DESC;
+
+select title, COUNT(genre_id) AS number_genres
+FROM movies
+INNER JOIN movies_genres ON movies.id = movies_genres.movie_id
+GROUP BY title
+ORDER BY number_genres DESC;
+
+select name AS director_name, COUNT(genre_id) AS number_genres
+FROM movies
+INNER JOIN directors ON movies.director_id = directors.id
+INNER JOIN movies_genres ON movies.id = movies_genres.movie_id
+GROUP BY director_name
+ORDER BY number_genres DESC;
